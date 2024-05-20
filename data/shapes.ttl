@@ -1,0 +1,62 @@
+@prefix CSRO: <http://www.semanticweb.org/aagr657/ontologies/2023/9/CraneSpaceRepresentationOntology#> . 
+@prefix LinkOnt: <http://purl.org/ConstructLinkOnt/LinkOnt#> . 
+@prefix bot: <https://w3id.org/bot#> . 
+@prefix geo: <http://www.opengis.net/ont/geosparql#> . 
+@prefix geom: <http://rdf.bg/geometry.ttl#> . 
+@prefix ifc: <https://standards.buildingsmart.org/IFC/DEV/IFC2X3/TC1/OWL> . 
+@prefix inst: <https://www.ugent.be/myAwesomeFirstBIMProject#> . 
+@prefix owl: <http://www.w3.org/2002/07/owl#> . 
+@prefix sf: <http://www.opengis.net/ont/sf#> . 
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix smls: <https://w3id.org/def/smls-owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+inst:checkCollision
+	rdf:type sh:JSFunction ;
+	sh:parameter [
+		sh:path inst:surfaceValue1;
+		sh:datatype geo:wktLiteral;
+	];
+	sh:parameter [
+		sh:path inst:surfaceValue2;
+		sh:datatype geo:wktLiteral;
+	];
+	sh:returnType xsd:boolean;
+	sh:jsLibrary [
+		# local web server
+		# sh:jsLibraryURL "http://localhost:8080/Constraint_Checking_Function.js"^^xsd:anyURI
+		
+		# dockerized web server - container called "shacl-x-web"
+		sh:jsLibraryURL "http://shacl-x-web/Constraint_Checking_Function.js"^^xsd:anyURI
+	] ;
+	sh:jsFunctionName "checkEQuality" .
+
+
+inst:boundingBoxIntersectionDetection
+	rdf:type sh:NodeShape ;
+    sh:targetClass ifc:IfcTaskTest ;
+	sh:sparql [
+		rdf:type sh:SPARQLConstraint ;
+		sh:message "Space constraint is violated for focus node: {$this}" ;
+		sh:select"""
+			PREFIX LinkOnt: <http://purl.org/ConstructLinkOnt/LinkOnt#>
+			PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+			PREFIX owl: <http://www.w3.org/2002/07/owl#>
+			PREFIX CSRO: <http://www.semanticweb.org/aagr657/ontologies/2023/9/CraneSpaceRepresentationOntology#>
+			PREFIX sf: <http://www.opengis.net/ont/sf#>
+			PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+			PREFIX bot: <https://w3id.org/bot#>
+			PREFIX inst: <https://www.ugent.be/myAwesomeFirstBIMProject#>
+			SELECT $this $this ?result
+			WHERE {
+				$this geo:asWKT1 ?surfaceValue1 .
+                    $this geo:asWKT2 ?surfaceValue2 .
+					BIND (inst:checkCollision(?surfaceValue1, ?surfaceValue2) AS ?result) .
+                    FILTER (?result = true)
+               }
+			""";
+		] ;
+.
