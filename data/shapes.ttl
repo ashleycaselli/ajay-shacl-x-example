@@ -37,7 +37,18 @@ inst:checkCollision
 
 inst:boundingBoxIntersectionDetection
 	rdf:type sh:NodeShape ;
-    sh:targetClass ifc:IfcTaskTest ;
+	sh:target [
+		rdf:type sh:SPARQLTarget ; 
+		sh:select """
+			PREFIX ifc: <https://standards.buildingsmart.org/IFC/DEV/IFC2X3/TC1/OWL>
+			PREFIX LinkOnt: <http://purl.org/ConstructLinkOnt/LinkOnt#>
+			SELECT $this
+			WHERE {
+				$this a ifc:IfcTaskTest .
+				$this LinkOnt:TaskLevel LinkOnt:SubActivity .
+			}
+		""" ;
+	] ;
 	sh:sparql [
 		rdf:type sh:SPARQLConstraint ;
 		sh:message "Space constraint is violated for focus node: {$this}" ;
